@@ -9,6 +9,7 @@ everywhere (``cpp``, ``csharp``, ``bash``, ``terraform`` ...).
 """
 
 from .api import analyze_gcs_object
+from .analyzer import analyze_files
 from .content_detector import (
     Detection,
     SnippetTooShort,
@@ -31,6 +32,7 @@ __version__ = "2.0.0"
 
 __all__ = [
     "analyze_gcs_object",
+    "analyze_files",
     "detect_programming_language",
     "detect_programmin_language",
     "Detection",

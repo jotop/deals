@@ -97,19 +97,20 @@ def resolve_language(path: str, head: bytes) -> Resolution:
     # Archive members may use backslashes (zips made on Windows): normalise.
     name = PurePosixPath(str(path).replace("\\", "/")).name
 
-    by_name = language_for_filename(name)
-    if by_name:
-        return Resolution(by_name, "filename")
-
     ext = PurePosixPath(name).suffix
     by_ext = _from_extension(ext, head) if ext else None
+    by_name = language_for_filename(name)
 
-    if len(head) > MIN_CONTENT_BYTES and (by_ext is None or by_ext in DETECTABLE_LANGUAGES):
+    if len(head) > MIN_CONTENT_BYTES:
         by_content = _from_content(head)
         if by_content:
             if by_ext and by_content in _SUBSET_LANGUAGES.get(by_ext, ()):
                 return Resolution(by_ext, f"extension (content only showed {by_content})")
             return Resolution(by_content, "content")
+
+
+    if by_name:
+        return Resolution(by_name, "filename")
 
     if by_ext:
         return Resolution(by_ext, "extension")
