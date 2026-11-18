@@ -3,6 +3,16 @@
 Fingerprints the source code stored in Google Cloud Storage objects: language
 breakdown plus the class / function / variable names found in every file.
 
+## Install
+
+```bash
+pip install .                  # core (Python 3.11+)
+pip install ".[archives]"      # + .7z and .rar support (.rar also needs `unrar` or `unar`)
+pip install -e ".[dev]"        # editable, with pytest
+```
+
+## Usage
+
 ```python
 from code_fingerprint import analyze_gcs_object
 

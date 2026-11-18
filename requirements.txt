@@ -1,5 +1,5 @@
 tree-sitter>=0.25
-tree-sitter-language-pack>=1.0      # grammars are downloaded on first use
+tree-sitter-language-pack>=1.25     # grammars are downloaded on first use
 google-cloud-storage
 
 # optional archive formats
