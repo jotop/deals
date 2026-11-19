@@ -27,6 +27,7 @@ class Kind(str, Enum):
 
     PROGRAMMING = "programming"
     MARKUP = "markup"
+    MARKUP_CODELESS = "markup-codeless"
     DATA = "data"
     PROSE = "prose"
 
@@ -45,7 +46,7 @@ class Language:
     has_grammar: bool = True               # False -> no tree-sitter grammar in the pack
 
 
-P, M, D, T = Kind.PROGRAMMING, Kind.MARKUP, Kind.DATA, Kind.PROSE
+P, M, Mc D, T = Kind.PROGRAMMING, Kind.MARKUP, Kind.MARKUP_CODELESS, Kind.DATA, Kind.PROSE
 
 _LANGUAGES: Tuple[Language, ...] = (
     # --- general-purpose programming -------------------------------------
@@ -140,14 +141,15 @@ _LANGUAGES: Tuple[Language, ...] = (
     Language("prisma", P, (".prisma",)),
     # --- markup ----------------------------------------------------------
     Language("html", M, (".html", ".htm", ".xhtml")),
-    Language("css", M, (".css",)),
-    Language("scss", M, (".scss",)),
     Language("sass", M, (".sass",), has_grammar=False),
     Language("less", M, (".less",)),
     Language("vue", M, (".vue",)),
     Language("svelte", M, (".svelte",)),
     Language("astro", M, (".astro",)),
     Language("jupyter", M, (".ipynb",), has_grammar=False),
+    # --- markup -- no code----------------------------------------------------------
+    Language("css", Mc, (".css",)),
+    Language("scss", Mc, (".scss",)),
     # --- data ------------------------------------------------------------
     Language("xml", D, (".xml", ".xsd", ".xsl", ".xslt", ".svg")),
     Language("json", D, (".json", ".jsonc")),
