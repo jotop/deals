@@ -20,7 +20,7 @@ class LanguageStats:
     lines: int = 0
     files: int = 0
     file_names: List[str] = field(default_factory=list)
-    #: file name -> [{"kind": "class"|"function"|"variable", "name": str, "line": int}, ...]
+    #: file name -> [{"kind": "class"|"function"|"variable"|"import", "name": str, "line": int}, ...]
     file_fingerprints: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:

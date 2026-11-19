@@ -4,6 +4,11 @@ Keys are ``tree_sitter_language_pack`` names.  Every pattern captures a name
 node as ``@class.name``, ``@function.name`` or ``@variable.name``; the part
 before the dot is the symbol kind that ends up in the fingerprint.
 
+``@import.name`` patterns cover imports written as function calls (``require``,
+``library``, ``@import``, ``source`` ...).  Imports written as statements (``import``,
+``use``, ``#include`` ...) need no entry: :mod:`.symbols` finds them for every
+language through the ``import`` row of ``_GENERIC_KINDS``.
+
 Languages without an entry here still get a fingerprint from the generic
 fallback in :mod:`.symbols`, which looks for ``*_declaration`` /
 ``*_definition`` nodes that have a ``name`` field.  Add an entry when that
@@ -38,6 +43,8 @@ QUERIES: Dict[str, List[str]] = {
         "(generator_function_declaration name: (identifier) @function.name)",
         "(method_definition name: (property_identifier) @function.name)",
         "(variable_declarator name: (identifier) @variable.name)",
+        '(call_expression function: (identifier) @_f arguments: (arguments . (string) @import.name) (#eq? @_f "require"))',
+        "(call_expression function: (import) arguments: (arguments . (string) @import.name))",
     ],
     "typescript": [
         "(class_declaration name: (type_identifier) @class.name)",
@@ -47,6 +54,8 @@ QUERIES: Dict[str, List[str]] = {
         "(function_declaration name: (identifier) @function.name)",
         "(method_definition name: (property_identifier) @function.name)",
         "(variable_declarator name: (identifier) @variable.name)",
+        '(call_expression function: (identifier) @_f arguments: (arguments . (string) @import.name) (#eq? @_f "require"))',
+        "(call_expression function: (import) arguments: (arguments . (string) @import.name))",
     ],
     "c": [
         "(struct_specifier name: (type_identifier) @class.name body: (_))",
@@ -70,6 +79,8 @@ QUERIES: Dict[str, List[str]] = {
     "r": [
         '(binary_operator lhs: (identifier) @function.name operator: ["<-" "=" "<<-"] rhs: (function_definition))',
         '(binary_operator lhs: (identifier) @variable.name operator: ["<-" "=" "<<-"])',
+        '(call function: (identifier) @_f arguments: (arguments . (argument value: (identifier) @import.name)) (#any-of? @_f "library" "require"))',
+        '(call function: (identifier) @_f arguments: (arguments . (argument value: (string) @import.name)) (#any-of? @_f "library" "require"))',
     ],
     "swift": [
         "(class_declaration name: (type_identifier) @class.name)",
@@ -113,6 +124,7 @@ QUERIES: Dict[str, List[str]] = {
         "(method name: (identifier) @function.name)",
         "(singleton_method name: (identifier) @function.name)",
         "(assignment left: (identifier) @variable.name)",
+        '(call method: (identifier) @_m arguments: (argument_list . (string) @import.name) (#any-of? @_m "require" "require_relative" "load"))',
     ],
     "php": [
         "(class_declaration name: (name) @class.name)",
@@ -178,6 +190,7 @@ QUERIES: Dict[str, List[str]] = {
         "(function_def (function_command (argument_list . (argument) @function.name)))",
         "(macro_def (macro_command (argument_list . (argument) @function.name)))",
         '(normal_command (identifier) @_c (argument_list . (argument) @variable.name) (#match? @_c "^(set|option|project)$"))',
+        '(normal_command (identifier) @_c (argument_list . (argument) @import.name) (#any-of? @_c "find_package" "include"))',
     ],
     "nix": [
         "(binding attrpath: (attrpath . (identifier) @function.name) expression: (function_expression))",
@@ -188,6 +201,7 @@ QUERIES: Dict[str, List[str]] = {
     "bash": [
         "(function_definition name: (word) @function.name)",
         "(variable_assignment name: (variable_name) @variable.name)",
+        '(command name: (command_name (word) @_c) . argument: (word) @import.name (#any-of? @_c "source" "."))',
     ],
     "powershell": [
         "(class_statement (simple_name) @class.name)",
@@ -200,6 +214,7 @@ QUERIES: Dict[str, List[str]] = {
         "(function_declaration name: (dot_index_expression field: (identifier) @function.name))",
         "(function_declaration name: (method_index_expression method: (identifier) @function.name))",
         "(assignment_statement (variable_list name: (identifier) @variable.name))",
+        '(function_call name: (identifier) @_f arguments: (arguments . (string) @import.name) (#eq? @_f "require"))',
     ],
     "perl": [
         "(package_statement name: (package) @class.name)",
@@ -241,6 +256,7 @@ QUERIES: Dict[str, List[str]] = {
         '(call target: (identifier) @_d (arguments (alias) @class.name) (#any-of? @_d "defmodule" "defprotocol" "defimpl"))',
         '(call target: (identifier) @_d (arguments (call target: (identifier) @function.name)) (#any-of? @_d "def" "defp" "defmacro" "defmacrop" "defguard" "defdelegate"))',
         '(call target: (identifier) @_d (arguments . (identifier) @function.name) (#any-of? @_d "def" "defp" "defmacro" "defmacrop"))',
+        '(call target: (identifier) @_d (arguments . (alias) @import.name) (#any-of? @_d "import" "alias" "use" "require"))',
     ],
     "haskell": [
         "(data_type name: (name) @class.name)",
@@ -254,6 +270,7 @@ QUERIES: Dict[str, List[str]] = {
         "(function_declaration name: (identifier) @function.name)",
         "(variable_declaration (identifier) @class.name [(struct_declaration) (enum_declaration) (union_declaration) (opaque_declaration)])",
         '(variable_declaration . (identifier) @variable.name (#not-eq? @variable.name "_"))',
+        '(builtin_function (builtin_identifier) @_b (arguments . (string) @import.name) (#eq? @_b "@import"))',
     ],
     "solidity": [
         "(contract_declaration name: (identifier) @class.name)",

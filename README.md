@@ -1,7 +1,8 @@
 # code_fingerprint
 
 Fingerprints the source code stored in Google Cloud Storage objects: language
-breakdown plus the class / function / variable names found in every file.
+breakdown plus the class / function / variable names and the imported libraries
+(`import os`, `#include <stdio.h>`, `use std::fs`, `require('fs')` ...) found in every file.
 
 ## Install
 
@@ -23,6 +24,9 @@ analyze_gcs_object("gs://other-bucket/app/")           # full URIs work too
 ```
 
 * Returns `{language: {bytes, lines, files, file_names, file_fingerprints, percent}}`.
+* Each file's fingerprint is a list of `{"kind", "name", "line"}` where `kind` is
+  `class`, `function`, `variable` or `import` (the library / module name, without
+  quotes, alias or imported members).
 * Returns `{}` when there is no code to fingerprint.
 * With a list, member names are prefixed with the object they came from
   (`repo-a.zip/src/app.py`), so equal paths in different objects stay distinct.
@@ -40,7 +44,7 @@ analyze_gcs_object("gs://other-bucket/app/")           # full URIs work too
 | `resolver.py` | which language is this file? (name -> content -> extension -> shebang) |
 | `languages.py` | **the language registry** - names, extensions, file names, shebangs |
 | `content_detector.py`, `signatures.py` | regex-based content detection |
-| `symbols.py`, `queries.py` | tree-sitter extraction and its per-language queries |
+| `symbols.py`, `queries.py` | tree-sitter extraction; `_GENERIC_KINDS` (incl. the `import` row) and per-language queries |
 | `filters.py`, `report.py`, `debug.py`, `errors.py` | small helpers |
 
 ## Language names
@@ -50,6 +54,14 @@ Every layer uses `tree_sitter_language_pack` names: `cpp`, `csharp`, `bash`,
 `normalize_language()` (`"C++"` -> `cpp`, `"Shell"` -> `bash`, ...). Only
 `jupyter`, `sass` and `text` have no grammar in the pack; they are counted but
 yield no symbols. `tests/test_languages.py` fails if a name drifts from the pack.
+
+## Imports
+
+Statement-style imports (`import`, `use`, `using`, `#include`, `open` ...) are found for
+every language through the `import` row of `_GENERIC_KINDS` in `symbols.py`; add a node
+type to `_IMPORT_NODE_TYPES` and a sample to `tests/import_samples.py`. Imports written as
+function calls (`require`, `library`, `@import`, `source`) are `@import.name` patterns in
+`queries.py`. Known gap: CSS `@import url(...)`.
 
 ## Adding a language
 
