@@ -36,6 +36,7 @@ MIN_CONTENT_BYTES = 50
 #: Minimum confidence in the "this is code" verdict to accept a content result.
 MIN_VERDICT_CONFIDENCE = 0.5
 
+HIGH_VERDICT_CONFIDENCE = 0.85
 #: For a file whose extension names language X, a content result that is a
 #: strict subset of X says nothing new (the detector can't tell TSX from
 #: TypeScript, or C++ from C-looking C++), so the extension wins.
@@ -85,7 +86,7 @@ def _from_content(head: bytes) -> Optional[str]:
     if (detection.contains_instructions
             and detection.verdict_confidence > MIN_VERDICT_CONFIDENCE
             and detection.language):
-        return detection.language
+        return detection.language, detection.verdict_confidence 
     return None
 
 
@@ -100,26 +101,40 @@ def resolve_language(path: str, head: bytes) -> Resolution:
     ext = PurePosixPath(name).suffix
     by_ext = _from_extension(ext, head) if ext else None
     by_name = language_for_filename(name)
-
+    
     if len(head) > MIN_CONTENT_BYTES:
-        by_content = _from_content(head)
-        if by_content:
-            if by_ext and by_content in _SUBSET_LANGUAGES.get(by_ext, ()):
-                return Resolution(by_ext, f"extension (content only showed {by_content})")
-            return Resolution(by_content, "content")
+        by_content, by_content_confidence = _from_content(head)
+    else:
+        by_content = None   
 
+
+    if by_content and by_content_confidence > HIGH_VERDICT_CONFIDENCE:
+       if by_ext and by_content in _SUBSET_LANGUAGES.get(by_ext, ()):
+           return Resolution(by_ext, f"extension (content only showed {by_content})")
+       return Resolution(by_content, "content")
 
     if by_name:
-        return Resolution(by_name, "filename")
+        return Resolution(by_name, "filename") \
+
+
 
     if by_ext:
         return Resolution(by_ext, "extension")
+    
     if ext:
         return Resolution(None, f"unknown extension {ext!r}")
 
     by_shebang = _from_shebang(head)
     if by_shebang:
         return Resolution(by_shebang, "shebang")
+        
+    
+    if by_content:
+       if by_ext and by_content in _SUBSET_LANGUAGES.get(by_ext, ()):
+           return Resolution(by_ext, f"extension (content only showed {by_content})")
+       return Resolution(by_content, "content")
+
+        
     return Resolution(None, "no extension, no shebang")
 
 
